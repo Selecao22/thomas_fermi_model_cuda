@@ -23,15 +23,13 @@ int main()
             double nu_0;
 
             if (q > 100)
-            {
-                nu_0 = -pow(q* 3.0 / 2.0, 2.0 / 3.0);
-            } else if (q < -100)
-            {
+                nu_0 = -pow(q * 3.0 / 2.0, 2.0 / 3.0);
+            else if (q < -100)
                 nu_0 = log(sqrt(PI) / 2.0 / q);
-            } else {
+
+            else
                 nu_0 = 0.5 * log(PI / 6.0) - 1.5 *
                         log(exp(pow(2.0 * pow(q, 2.0 / 3.0), 1.0 / 3.0)) - 1.0);
-            }
 
             double *fi;
             double *x;
@@ -72,11 +70,20 @@ int main()
                     beta[N - 2] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
                 }
 
-                for (int k = 0; k < N - 1; ++k) {
-                    fi[k + 1] = alpha[k] * fi[k] + beta[k];
-                }
+                calculate_approximation(alpha, beta, fi, N);
 
             }
+
+            nu_0 = -fi[N - 1];
+
+            double pe = pow(2.0 * tet, 2.5) / (6.0 * pow(PI, 2)) * fint_32(-nu_0);
+            double psum = 29420.0 * (pe + tet / v);
+
+            auto x2int32 = (double*)calloc(N, sizeof(double));
+            auto se_array = (double*)calloc(N, sizeof(double));
+
+            calculate_entrope(x2int32,se_array, fi, H, N);
+
 
 
 
@@ -87,6 +94,8 @@ int main()
             free(dfi);
             free(alpha);
             free(beta);
+            free(x2int32);
+            free(se_array);
 
 //            std::cout << (int)(((double)(i * POINT_NUMBER + j)) / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
 //            std::flush(std::cout);

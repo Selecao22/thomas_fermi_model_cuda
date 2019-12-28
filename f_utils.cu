@@ -85,6 +85,109 @@ get_init_assumption
     cudaFree(d_x);
 }
 
+__global__
+void
+calculate_approximation_cuda(
+        double *alpha,
+        double *beta,
+        double *fi,
+        int n
+        )
+{
+    int block = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (block < n - 1){
+        fi[block + 1] = alpha[block] * fi[block] + beta[block];
+    }
+}
+
+void
+calculate_approximation(
+        double *alpha,
+        double *beta,
+        double *fi,
+        int n
+        )
+{
+    double *d_alpha;
+    double *d_beta;
+    double *d_fi;
+
+    auto size_of_array_ab = sizeof(double) * (n - 1);
+    auto size_of_array_fi = sizeof(double) * n;
+
+    cudaMalloc(&d_alpha, size_of_array_ab);
+    cudaMalloc(&d_beta, size_of_array_ab);
+    cudaMalloc(&d_fi, size_of_array_fi);
+
+    cudaMemcpy(d_alpha, alpha, size_of_array_ab, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_beta, beta, size_of_array_ab, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_fi, fi, size_of_array_fi, cudaMemcpyHostToDevice);
+
+    calculate_approximation_cuda<<<(n / 1024) + 1, 1024>>>(d_alpha, d_beta, d_fi, n);
+
+    cudaMemcpy(fi, d_fi, size_of_array_fi, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_alpha);
+    cudaFree(d_beta);
+    cudaFree(d_fi);
+}
+
+__global__
+void
+calculate_entrope_cuda(
+        double* x2int32,
+        double* se_array,
+        double* fi,
+        double h,
+        double n
+)
+{
+    int block = blockDim.x * blockIdx.x + threadIdx.x;
+
+    if (block < n)
+    {
+        x2int32[block] = 2.0 * pow(block * h, 5.0) * fint_32(fi[block] / pow(block * h, 2.0));
+        se_array[block] = 2.0 * pow(block * h, 5.0) * ((5.0 / 3.0) * fint_32(fi[block] / pow(block * h, 2.0)) -
+                (fi[block] / pow(block * h, 2.0)) * fint_12(fi[block] / pow(block * h, 2.0)));
+    }
+}
+
+void calculate_entrope(
+        double* x2int32,
+        double* se_array,
+        double* fi,
+        double h,
+        double n
+        )
+{
+    double *d_x2int32;
+    double *d_se_array;
+    double *d_fi;
+    auto size_of_array = sizeof(double) * n;
+
+    cudaMalloc(&d_x2int32, size_of_array);
+    cudaMalloc(&d_se_array, size_of_array);
+    cudaMalloc(&d_fi, size_of_array);
+
+    cudaMemcpy(d_fi, fi, size_of_array, cudaMemcpyHostToDevice);
+
+    calculate_entrope_cuda <<< (n / 1024) + 1, 1024 >>> (
+            d_x2int32,
+            d_se_array,
+            d_fi,
+            h,
+            n
+            );
+
+    cudaMemcpy(x2int32, d_x2int32, size_of_array, cudaMemcpyDeviceToHost);
+    cudaMemcpy(se_array, d_se_array, size_of_array, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_x2int32);
+    cudaFree(d_se_array);
+    cudaFree(d_fi);
+}
+
 __host__
 __device__
 double
@@ -128,4 +231,27 @@ fint_12(double x) {
     double exp_of_x = exp(2.0 * x / 3.0);
 
     return pow(1.5, 0.5) * pow(log(pi6_pow_1_3 * exp_of_x), 1.5);
+}
+
+__host__
+__device__
+double
+fint_32(double x)
+{
+    if (x >= 100.0)
+    {
+        return (2.0 / 5.0) * pow(x, 2.5);
+    }
+
+    if (x <= -50.0)
+    {
+        return 0.75 * sqrt(PI) * exp(x);
+    }
+
+    double pi6_pow_1_3 = pow(PI / 6.0, 1.0 / 3.0);
+    double exp_of_x = exp(2.0 * x / 3.0);
+
+    double f12 = pow(1.5, 0.5) * pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 1.5);
+    return 0.3 * f12 * pow(185.0 * f12 + 18.0 * pow(f12, 2.0), 1.0 / 3.0);
+
 }

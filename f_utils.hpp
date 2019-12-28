@@ -27,6 +27,22 @@ get_init_assumption
         int n
 );
 
+void
+calculate_approximation(
+        double *alpha,
+        double *beta,
+        double *fi,
+        int n
+);
+
+void calculate_entrope(
+        double* x2int32,
+        double* se_array,
+        double* fi,
+        double h,
+        double n
+);
+
 __host__
 __device__
 double
@@ -36,5 +52,10 @@ __host__
 __device__
 double
 fint_12(double x);
+
+__host__
+__device__
+double
+fint_32(double x);
 
 
