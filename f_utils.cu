@@ -1,9 +1,7 @@
 //
 // Created by nikky on 26.12.2019.
 //
-
 #include "f_utils.hpp"
-#include <cuda_runtime.h>
 
 double* create_physic_array(int size)
 {
@@ -26,7 +24,6 @@ __global__
 void
 get_init_assumpiton_cuda
 (
-        double* dfi,
         double* x,
         double* fi,
         double z,
@@ -44,7 +41,6 @@ get_init_assumpiton_cuda
     {
         fi[block] = (z / tet / r0) * (1.0 - 1.5 * pow(hi, 2.0) + 0.5 * pow(hi, 6.0)) - nu_0 * pow(hi, 2.0);
         x[block] = hi;
-        dfi[block] = 0;
     }
 
 }
@@ -52,7 +48,6 @@ get_init_assumpiton_cuda
 void
 get_init_assumption
 (
-        double **dfi,
         double **x,
         double **fi,
         double z,
@@ -63,20 +58,16 @@ get_init_assumption
         int n
         )
 {
-//    *fi = (double*)calloc(n, sizeof(double));
-    *fi = (double*)malloc(n * sizeof(double));
+    *fi = (double*)calloc(n, sizeof(double));
     *x = (double*)calloc(n, sizeof(double));
-    *dfi = (double*)calloc(n, sizeof(double));
+
     double* d_fi;
     double* d_x;
-    double* d_dfi;
 
     cudaMalloc(&d_fi, n * sizeof(double));
     cudaMalloc(&d_x, n * sizeof(double));
-    cudaMalloc(&d_dfi, n * sizeof(double));
 
-    get_init_assumpiton_cuda<<<n / 1024, 1024>>>(
-            d_dfi,
+    get_init_assumpiton_cuda<<<(n / 1024) + 1, 1024>>>(
             d_x,
             d_fi,
             z,
@@ -89,10 +80,52 @@ get_init_assumption
 
     cudaMemcpy(*fi, d_fi, sizeof(double) * n, cudaMemcpyDeviceToHost);
     cudaMemcpy(*x, d_x, sizeof(double) * n, cudaMemcpyDeviceToHost);
-    cudaMemcpy(*dfi, d_dfi, sizeof(double) * n, cudaMemcpyDeviceToHost);
 
     cudaFree(d_fi);
     cudaFree(d_x);
-    cudaFree(d_dfi);
 }
 
+__host__
+__device__
+double
+fint_neg12(double x)
+{
+    if ( x >= 100.0)
+    {
+        return 2.0 * pow(x, 0.5);
+    }
+
+    if (x <= - 50.0)
+    {
+        return sqrt(PI) * exp(x);
+    }
+
+    double pi6_pow_1_3 = pow(PI / 6.0, 1.0 / 3.0);
+    double exp_of_x = exp(2.0 * x / 3.0);
+
+    // quesioning about my existance
+    double res = 2.0 * 1.5 * pow(1.5, 0.5) *
+            pow(log(1.0 + pi6_pow_1_3) * exp_of_x, 0.5) /
+            (1.0 + pi6_pow_1_3 * exp_of_x) * (-pi6_pow_1_3) * exp_of_x * 1.5;
+
+    return res;
+}
+
+__host__
+__device__
+double
+fint_12(double x) {
+    if (x >= 100.0) {
+        return 1.5 * pow(x, 1.5);
+    }
+
+    if (x <= -50.0)
+    {
+        return 0.5 * sqrt(PI) * exp(x);
+    }
+
+    double pi6_pow_1_3 = pow(PI / 6.0, 1.0 / 3.0);
+    double exp_of_x = exp(2.0 * x / 3.0);
+
+    return pow(1.5, 0.5) * pow(log(pi6_pow_1_3 * exp_of_x), 1.5);
+}
