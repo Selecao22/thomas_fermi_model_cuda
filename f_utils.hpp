@@ -12,7 +12,8 @@ const double H = 1.0/N;
 const double A = 107.0; // tmp constant, must be as parameter
 const double Z = 47.0; // tmp constant, must be as parameter
 
-double* create_physic_array(int size);
+double*
+create_physic_array(int size);
 
 void
 get_init_assumption
@@ -27,7 +28,8 @@ get_init_assumption
         int n
 );
 
-void calculate_entrope(
+void
+calculate_entrope(
         double* x2int32,
         double* se_array,
         double* fi,
@@ -35,15 +37,28 @@ void calculate_entrope(
         double n
 );
 
+
+__host__
+__device__
+double
+rect(
+        const double* x,
+        const double* f,
+        int n
+);
+
+
 __host__
 __device__
 double
 fint_neg12(double x);
 
+
 __host__
 __device__
 double
 fint_12(double x);
+
 
 __host__
 __device__

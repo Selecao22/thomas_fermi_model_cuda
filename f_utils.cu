@@ -143,6 +143,23 @@ void calculate_entrope(
 __host__
 __device__
 double
+rect(
+        const double* x,
+        const double* f,
+        int n
+        )
+{
+    double s = 0.0;
+
+    for (int i = 1; i < n; ++i)
+        s = s + f[i] * (x[i] - x[i - 1]);
+
+    return s;
+}
+
+__host__
+__device__
+double
 fint_neg12(double x)
 {
     if ( x >= 100.0)
@@ -205,5 +222,4 @@ fint_32(double x)
 
     double f12 = pow(1.5, 0.5) * pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 1.5);
     return 0.3 * f12 * pow(185.0 * f12 + 18.0 * pow(f12, 2.0), 1.0 / 3.0);
-
 }
