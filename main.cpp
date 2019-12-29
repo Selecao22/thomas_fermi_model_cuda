@@ -57,7 +57,7 @@ int main()
                         (fint_12(fi[N - 1]) - fi[N - 1] * fint_neg12(fi[N - 1])) /
                         (1.0 - 2.0 * H + h_pow2 * (1.0 + aa * fint_neg12(fi[N - 1])));
 
-                for (int k = N - 2; k >= 0; k--) {
+                for (int k = N - 2; k > 0; k--) {
                     double a_c = H * (2.0 * k + 1.0);
                     double c_c = H * (2.0 * k - 1.0);
                     double b_c = -4.0 * H * k * (1.0 + aa * h_pow2 *
@@ -66,8 +66,8 @@ int main()
                             (2.0 * h_pow2 * fint_12(fi[k] / pow(H * k, 2.0)) -
                             fi[k] * fint_neg12(fi[k] / pow(H * k, 2.0)));
 
-                    alpha[N - 2] = -a_c / (b_c + c_c * alpha[k]);
-                    beta[N - 2] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
+                    alpha[k - 1] = -a_c / (b_c + c_c * alpha[k]);
+                    beta[k - 1] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
                 }
 
                 for (int k = 0; k < N - 1; k++)
@@ -83,9 +83,23 @@ int main()
             auto x2int32 = (double*)calloc(N, sizeof(double));
             auto se_array = (double*)calloc(N, sizeof(double));
 
-            calculate_entrope(x2int32,se_array, fi, H, N);
+            calculate_entrope(x2int32, se_array, fi, H, N);
 
             auto dif0 = (fi[1] - fi[0]) / pow(H, 2.0);
+            auto int_01_calc = rect(x, x2int32, N);
+
+            auto se = (4.0 * sqrt(2.0)* pow(tet, 1.5) * pow(r0, 3.0) / PI) * rect(x, se_array, N);
+            auto s = 96.48 * (se + 1.5 * log(1836 * A * tet * pow(v, 2.0 / 3.0) / (2.0 * PI)) + 2.5) / A;
+
+            auto epe = (2.0 * sqrt(2.0) * v * pow(tet, 2.5) / pow(PI, 2.0)) *
+                    (fint_32(-nu_0) - 3.0 * int_01_calc);
+
+            auto eke = (3.0 * sqrt(2.0) * v * pow(tet, 2.5) / pow(PI, 2.0)) * int_01_calc;
+            auto ee = epe + eke;
+            auto e0 = -0.76874512422 * pow(Z, 7.0 / 3.0);
+            auto e = 2626.0 * (ee - e0 + 1.5 * tet) / A;
+
+            auto q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * fint_neg12(fi[N - 1]);
 
 
             auto *dfi = (double*)calloc(N, sizeof(double));
