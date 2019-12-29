@@ -57,7 +57,7 @@ int main()
                         (fint_12(fi[N - 1]) - fi[N - 1] * fint_neg12(fi[N - 1])) /
                         (1.0 - 2.0 * H + h_pow2 * (1.0 + aa * fint_neg12(fi[N - 1])));
 
-                for (int k = N - 2; k > 0; k--) {
+                for (int k = N - 2; k >= 0; k--) {
                     double a_c = H * (2.0 * k + 1.0);
                     double c_c = H * (2.0 * k - 1.0);
                     double b_c = -4.0 * H * k * (1.0 + aa * h_pow2 *
@@ -70,7 +70,8 @@ int main()
                     beta[N - 2] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
                 }
 
-                calculate_approximation(alpha, beta, fi, N);
+                for (int k = 0; k < N - 1; k++)
+                    fi[k + 1] = alpha[k] * fi[k] + beta[k];
 
             }
 
@@ -84,7 +85,7 @@ int main()
 
             calculate_entrope(x2int32,se_array, fi, H, N);
 
-
+            auto dif0 = (fi[1] - fi[0]) / pow(H, 2.0);
 
 
             auto *dfi = (double*)calloc(N, sizeof(double));

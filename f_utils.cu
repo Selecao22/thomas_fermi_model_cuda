@@ -87,54 +87,6 @@ get_init_assumption
 
 __global__
 void
-calculate_approximation_cuda(
-        double *alpha,
-        double *beta,
-        double *fi,
-        int n
-        )
-{
-    int block = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (block < n - 1){
-        fi[block + 1] = alpha[block] * fi[block] + beta[block];
-    }
-}
-
-void
-calculate_approximation(
-        double *alpha,
-        double *beta,
-        double *fi,
-        int n
-        )
-{
-    double *d_alpha;
-    double *d_beta;
-    double *d_fi;
-
-    auto size_of_array_ab = sizeof(double) * (n - 1);
-    auto size_of_array_fi = sizeof(double) * n;
-
-    cudaMalloc(&d_alpha, size_of_array_ab);
-    cudaMalloc(&d_beta, size_of_array_ab);
-    cudaMalloc(&d_fi, size_of_array_fi);
-
-    cudaMemcpy(d_alpha, alpha, size_of_array_ab, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_beta, beta, size_of_array_ab, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_fi, fi, size_of_array_fi, cudaMemcpyHostToDevice);
-
-    calculate_approximation_cuda<<<(n / 1024) + 1, 1024>>>(d_alpha, d_beta, d_fi, n);
-
-    cudaMemcpy(fi, d_fi, size_of_array_fi, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_alpha);
-    cudaFree(d_beta);
-    cudaFree(d_fi);
-}
-
-__global__
-void
 calculate_entrope_cuda(
         double* x2int32,
         double* se_array,

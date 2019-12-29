@@ -27,14 +27,6 @@ get_init_assumption
         int n
 );
 
-void
-calculate_approximation(
-        double *alpha,
-        double *beta,
-        double *fi,
-        int n
-);
-
 void calculate_entrope(
         double* x2int32,
         double* se_array,
