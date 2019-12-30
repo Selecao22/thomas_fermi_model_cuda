@@ -2,8 +2,25 @@
 
 #include "f_utils.hpp"
 
-int main()
+int main(int argc, char** argv)
 {
+    int N = 10000;
+    double H;
+
+    if (argc == 1){
+        printf("usage: %s N\n", argv[0]);
+        return 0;
+    }
+
+    if (argc == 2) {
+        N = atoi(argv[1]);
+        if (N <= 0){
+            printf("error: N must be from 1 to 100 000 000\n");
+            return 1;
+        }
+    }
+
+    H = 1.0 / N;
     double *rho_array = create_physic_array(N);
     double *t_array = create_physic_array(N);
 
@@ -199,4 +216,6 @@ int main()
     fclose(rha);
     fclose(ta);
     fclose(da);
+
+    return 0;
 }
