@@ -140,6 +140,8 @@ void calculate_entrope(
     cudaFree(d_fi);
 }
 
+
+// IMPROVE - REDUCTION OPERATION
 __host__
 __device__
 double
@@ -223,3 +225,54 @@ fint_32(double x)
     double f12 = pow(1.5, 0.5) * pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 1.5);
     return 0.3 * f12 * pow(185.0 * f12 + 18.0 * pow(f12, 2.0), 1.0 / 3.0);
 }
+
+
+__host__
+__device__
+double
+fint_neg12_der(double x)
+{
+    if (x >= 120.0)
+        return 1 / sqrt(1.0*x) + 12.4298 / pow(x, 4.5+1.2337) / pow(x, 2.5);
+
+    if (x <= -50.0)
+        return sqrt(PI) * exp(x);
+
+    return 2.0 * sqrt(3.0/2.0) * (-pow(2.0, (1.0 / 3.0)) * pow(PI, 2.0 / 3.0) * exp(4.0 * x / 3.0) *
+        sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x /3.0) + 1.0))) / (3.0 * pow(3.0, 2.0 / 3.0) *
+        pow(pow(PI/6.0, 1.0/3.0) * exp(2.0 * x / 3.0) + 1.0, 2.0) +
+        (pow(PI, 2.0 / 3.0) * exp( 4.0 * x / 3.0) / ( 3.0 * pow(6.0, 2.0 / 3.0) * (pow(PI / 6.0, 1.0 / 3.0) *
+        pow(exp(2.0 * x / 3.0) + 1.0, 2.0) * sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0)))) +
+        (pow(2.0,2.0 / 3.0) * pow(PI / 3.0, 1.0 / 3.0) * exp(2.0 * x / 3.0)*sqrt(log(pow(PI / 6.0,1.0 / 3.0) *
+        exp((2.0 * x) / 3.0) + 1.0))) / (3.0 * (pow(PI / 6.0,1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0))));
+}
+
+
+__host__
+__device__
+double Y(double x)
+{
+    double low_bound = -10.0;
+    const int N_grid = 1000;
+    double h;
+    double x_array[N_grid];
+    double y_array[N_grid];
+
+    if (x > 100.0)
+        return (11.0 / 3.0) * pow(x, 2.0);
+
+    if (x < -50.0)
+        return  (6.0 / 4.0) * (PI / 2.0) * exp(2.0 * x) + fint_neg12(x) * fint_12(x) / 2.0;
+
+    h = (x - low_bound) / N_grid;
+    for (int i = 0; i < N_grid; ++i) {
+        x_array[i] = low_bound + i * h;
+        y_array[i] = pow(fint_neg12(x_array[i]), 2.0);
+    }
+
+    return  (6.0 / 4.0) * rect(x_array, y_array, N_grid) + fint_neg12(x) * fint_12(x) / 2.0;
+
+}
+
+
+

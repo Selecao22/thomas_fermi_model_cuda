@@ -48,6 +48,8 @@ int main()
             auto *alpha = (double*)calloc(N - 1, sizeof(double));
             auto *beta = (double*)calloc(N - 1, sizeof(double));
 
+
+            // classic model
             for(int lp = 0; lp < 10; lp++)
             {
                 double h_pow2 = pow(H, 2.0);
@@ -100,9 +102,57 @@ int main()
             auto e = 2626.0 * (ee - e0 + 1.5 * tet) / A;
 
             auto q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * fint_neg12(fi[N - 1]);
+            auto f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
+                    ((7.0 / 4.0) * pow(fint_neg12(fi[N - 1]), 2.5) * fint_neg12_der(fi[N - 1]));
+            alpha[N - 2] = 1.0 / (1.0 - 2.0 * H + pow(H, 2.0) * (1.0 + 2.0 * q_quant));
+            beta[N - 2] = -2.0 * pow(H, 2.0) * f_quant / (1.0 - 2.0 * H + pow(H, 2.0) * (1.0 + 2.0 * q_quant));
 
+
+            // quantum correlation
+            for (int k = N - 1; k > 0; k--) {
+                q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
+                        fint_neg12(fi[k] / pow(H * k, 2.0));
+
+                f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
+                          ((7.0 / 4.0) * pow(fint_neg12(fi[k] / pow(H * k, 2.0)), 2.5) *
+                          fint_12(fi[k] / pow(H * k, 2.0)) * fint_neg12_der(fi[k] / pow(H * k, 2.0)));
+                auto a_c = H * (2.0 * k + 1.0);
+                auto c_c = H * (2.0 * k - 1.0);
+                auto b_c = -4.0 * k * H * (1.0 + 2.0 * pow(H * k, 2.0) * pow(H, 2.0) * q_quant);
+                auto d_c = f_quant * 8.0 * pow(H * k, 3.0) * pow(H, 3.0);
+                alpha[k - 1] = -a_c / (b_c + c_c * alpha[k]);
+                beta[k - 1] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
+            }
 
             auto *dfi = (double*)calloc(N, sizeof(double));
+
+            for (int k = 0; k < N - 1; ++k)
+                dfi[k + 1] = alpha[k] * dfi[k] + beta[k];
+
+
+            auto dpe = pow(tet, 2.0) / (3.0 * pow(PI, 3.0)) * (dfi[N - 1] * fint_12(fi[N - 1]) + Y(fi[N]));
+
+            auto dee_array = (double*)calloc(N, sizeof(double));
+            auto dse_array = (double*)calloc(N, sizeof(double));
+
+            for (int k = 0; k < N; ++k) {
+
+                dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
+                        fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
+                        pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
+
+                dee_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
+                        fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
+                        pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
+            }
+
+            auto dee = (2.0 * pow(tet, 2.0) * pow(r0, 2.0)) / (3.0 * pow(PI, 2.0)) * rect(x, dee_array, N) +
+                    (sqrt(2.0 * tet) * Z / (6.0 * PI)) * (dfi[1] - dfi[0]) /
+                    pow(H, 2.0) + 0.269900170 * pow(Z, 5.0 / 3.0);
+
+            auto dmu = sqrt(2.0) * sqrt(tet) / (6.0 * PI) * (0.5 * fint_neg12(fi[N - 1] + dfi[N - 1]));
+
+            delta_array[i * POINT_NUMBER + j] = dee / (ee - e0);
 
             free(fi);
             free(x);
@@ -111,10 +161,12 @@ int main()
             free(beta);
             free(x2int32);
             free(se_array);
+            free(dee_array);
+            free(dse_array);
 
-//            std::cout << (int)(((double)(i * POINT_NUMBER + j)) / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
-//            std::flush(std::cout);
-            std::cout << i * POINT_NUMBER + j << std::endl;
+            std::cout << (int)(((double)(i * POINT_NUMBER + j)) / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
+            std::flush(std::cout);
+//            std::cout << i * POINT_NUMBER + j << std::endl;
         }
     }
 

@@ -4,7 +4,7 @@
 
 // Physical constants and some thrash like a const iterations
 const int N_X = 20;
-const int N = 1000000;
+const int N = 10000;
 const int POINT_NUMBER = 54;
 const double PI = 3.141592653589793;
 const double K = 36.75;
@@ -57,6 +57,12 @@ fint_neg12(double x);
 __host__
 __device__
 double
+fint_neg12_der(double x);
+
+
+__host__
+__device__
+double
 fint_12(double x);
 
 
@@ -65,4 +71,9 @@ __device__
 double
 fint_32(double x);
 
+
+
+__host__
+__device__
+double Y(double x);
 
