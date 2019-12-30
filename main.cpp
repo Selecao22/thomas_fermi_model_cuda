@@ -10,6 +10,20 @@ int main()
     //linear matrix
     auto *delta_array = (double*)calloc(POINT_NUMBER * POINT_NUMBER, sizeof(double));
 
+    auto *alpha = (double*)calloc(N - 1, sizeof(double));
+    auto *beta = (double*)calloc(N - 1, sizeof(double));
+
+    auto *fi = (double*)calloc(N, sizeof(double));
+    auto *x = (double*)calloc(N, sizeof(double));
+
+    auto x2int32 = (double*)calloc(N, sizeof(double));
+    auto se_array = (double*)calloc(N, sizeof(double));
+
+    auto *dfi = (double*)calloc(N, sizeof(double));
+
+    auto dee_array = (double*)calloc(N, sizeof(double));
+    auto dse_array = (double*)calloc(N, sizeof(double));
+
     for (int i = 0; i < POINT_NUMBER; ++i) {
         auto t = t_array[i] * 1e-3;
 
@@ -31,9 +45,6 @@ int main()
                 nu_0 = 0.5 * log(PI / 6.0) - 1.5 *
                         log(exp(pow(2.0 * pow(q, 2.0 / 3.0), 1.0 / 3.0)) - 1.0);
 
-            double *fi;
-            double *x;
-
             get_init_assumption(
                     &x,
                     &fi,
@@ -44,9 +55,6 @@ int main()
                     nu_0,
                     N
                     );
-
-            auto *alpha = (double*)calloc(N - 1, sizeof(double));
-            auto *beta = (double*)calloc(N - 1, sizeof(double));
 
 
             // classic model
@@ -81,9 +89,6 @@ int main()
 
             double pe = pow(2.0 * tet, 2.5) / (6.0 * pow(PI, 2)) * fint_32(-nu_0);
             double psum = 29420.0 * (pe + tet / v);
-
-            auto x2int32 = (double*)calloc(N, sizeof(double));
-            auto se_array = (double*)calloc(N, sizeof(double));
 
             calculate_entrope(x2int32, se_array, fi, H, N);
 
@@ -124,23 +129,18 @@ int main()
                 beta[k - 1] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
             }
 
-            auto *dfi = (double*)calloc(N, sizeof(double));
-
             for (int k = 0; k < N - 1; ++k)
                 dfi[k + 1] = alpha[k] * dfi[k] + beta[k];
 
 
             auto dpe = pow(tet, 2.0) / (3.0 * pow(PI, 3.0)) * (dfi[N - 1] * fint_12(fi[N - 1]) + Y(fi[N]));
 
-            auto dee_array = (double*)calloc(N, sizeof(double));
-            auto dse_array = (double*)calloc(N, sizeof(double));
-
             for (int k = 0; k < N; ++k) {
 
-                dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
+/*                dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
                         fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
                         pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
-
+*/
                 dee_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
                         fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
                         pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
@@ -154,23 +154,49 @@ int main()
 
             delta_array[i * POINT_NUMBER + j] = dee / (ee - e0);
 
-            free(fi);
-            free(x);
-            free(dfi);
-            free(alpha);
-            free(beta);
-            free(x2int32);
-            free(se_array);
-            free(dee_array);
-            free(dse_array);
+//            std::cout << (int)(((double)(i * POINT_NUMBER + j) + 1) / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
+//            std::flush(std::cout);
+            std::cout << i * POINT_NUMBER + j << std::endl;
+        }
+    }
 
-            std::cout << (int)(((double)(i * POINT_NUMBER + j)) / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
-            std::flush(std::cout);
-//            std::cout << i * POINT_NUMBER + j << std::endl;
+    FILE* rha;
+    FILE* ta;
+    FILE* da;
+
+    rha = fopen("rha.csv", "wt");
+    ta = fopen("ta.csv", "wt");
+    da = fopen("da.csv", "wt");
+
+    fseek(rha, 0, SEEK_SET);
+    fseek(ta, 0, SEEK_SET);
+    fseek(da, 0, SEEK_SET);
+
+    for (int i = 0; i < POINT_NUMBER; ++i) {
+        fprintf(rha, "%f,", rho_array[i]);
+        fprintf(ta, "%f,", t_array[i]);
+    }
+
+    for (int i = 0; i < POINT_NUMBER; ++i) {
+        for (int j = 0; j < POINT_NUMBER; ++j) {
+            fprintf(da, "%f,", delta_array[i * POINT_NUMBER + j]);
         }
     }
 
     free(rho_array);
     free(t_array);
     free(delta_array);
+    free(fi);
+    free(x);
+    free(dfi);
+    free(alpha);
+    free(beta);
+    free(x2int32);
+    free(se_array);
+    free(dee_array);
+    free(dse_array);
+
+    fclose(rha);
+    fclose(ta);
+    fclose(da);
 }

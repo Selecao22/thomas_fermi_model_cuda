@@ -9,8 +9,6 @@ set(THOMAS_FERMI_SOURCES
         main.cpp
         )
 
-set(CMAKE_CXX_FLAGS "-g")
-
 add_library(tf_cuda_improve STATIC f_utils.cu)
 
 set_target_properties(tf_cuda_improve

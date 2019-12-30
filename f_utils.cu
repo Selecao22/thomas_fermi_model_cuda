@@ -58,9 +58,6 @@ get_init_assumption
         int n
         )
 {
-    *fi = (double*)calloc(n, sizeof(double));
-    *x = (double*)calloc(n, sizeof(double));
-
     double* d_fi;
     double* d_x;
 
