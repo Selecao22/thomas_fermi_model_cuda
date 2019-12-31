@@ -6,11 +6,9 @@ set(THOMAS_FERMI_SOURCES
         main.c
         )
 
-add_library(tf_cuda_improve STATIC f_utils.c)
-
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -lm")
-
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -lm")
 
 add_executable(real_model ${THOMAS_FERMI_SOURCES})
 
+add_library(tf_cuda_improve STATIC f_utils.c)
 target_link_libraries(real_model tf_cuda_improve)
