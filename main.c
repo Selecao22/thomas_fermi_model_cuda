@@ -58,15 +58,15 @@ int main(int argc, char** argv)
 
                 double tet = K * t;
 
-                double r0 = 1.388f * pow((A / rho_array[j]), 1.0/3.0);
+                double r0 = 1.388 * pow((A / rho_array[j]), 1.0/3.0);
                 double q = 2.795e-3 * Z * rho_array[j] / A / pow(t, 1.5);
-                double v = (4.0f / 3.0f) * PI * pow(r0, 3.0f);
-                double aa = 4.0f / PI * sqrt(2.0f * tet) * pow(r0, 2.0f);
+                double v = (4.0 / 3.0) * PI * pow(r0, 3.0);
+                double aa = 4.0 / PI * sqrt(2.0 * tet) * pow(r0, 2.0);
                 double nu_0;
 
-                if (q > 100.0f)
-                    nu_0 = -pow(q * 3.0f / 2.0f, 2.0f / 3.0f);
-                else if (q < -100.0f)
+                if (q > 100.0)
+                    nu_0 = -pow(q * 3.0 / 2.0, 2.0 / 3.0);
+                else if (q < -100.0)
                     nu_0 = log(sqrt(PI) / 2.0f / q);
 
                 else
@@ -165,10 +165,10 @@ int main(int argc, char** argv)
 
                 for (int k = 0; k < N; ++k) {
 
-/*                dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
+                    dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
                         fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
                         pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
-*/
+
                     dee_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
                                                     fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
                                                                                        pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 #pragma omp critical
                 {
                     progress++;
-                    printf("%d\r", (int)((double)progress / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) );
+                    printf("%d%%\r", (int)((double)progress / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) );
                     fflush(stdout);
                 }
 
@@ -211,9 +211,9 @@ int main(int argc, char** argv)
     FILE* ta;
     FILE* da;
 
-    rha = fopen("rha.csv", "wt");
-    ta = fopen("ta.csv", "wt");
-    da = fopen("da.csv", "wt");
+    rha = fopen("data3ddy.csv", "wt");
+    ta = fopen("data3ddx.csv", "wt");
+    da = fopen("test_data_vol.csv", "wt");
 
     fseek(rha, 0, SEEK_SET);
     fseek(ta, 0, SEEK_SET);
