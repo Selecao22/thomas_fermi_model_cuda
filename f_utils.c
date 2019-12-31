@@ -1,11 +1,11 @@
 //
 // Created by nikky on 26.12.2019.
 //
-#include "f_utils.hpp"
+#include "f_utils.h"
 
 double* create_physic_array(int size)
 {
-    auto *array = (double*)calloc(size, sizeof(double));
+    double *array = (double*)calloc(size, sizeof(double));
     double point_step = 0.1;
 
     array[0] = 0.1;
@@ -20,36 +20,11 @@ double* create_physic_array(int size)
 }
 
 
-__global__
-void
-get_init_assumpiton_cuda
-(
-        double* x,
-        double* fi,
-        double z,
-        double tet,
-        double r0,
-        double h,
-        double nu_0,
-        int n
-        )
-{
-    unsigned int block = blockDim.x * blockIdx.x + threadIdx.x;
-    double hi = block * h;
-
-    if (block < n)
-    {
-        fi[block] = (z / tet / r0) * (1.0 - 1.5 * pow(hi, 2.0) + 0.5 * pow(hi, 6.0)) - nu_0 * pow(hi, 2.0);
-        x[block] = hi;
-    }
-
-}
-
 void
 get_init_assumption
 (
-        double **x,
-        double **fi,
+        double *x,
+        double *fi,
         double z,
         double tet,
         double r0,
@@ -58,49 +33,13 @@ get_init_assumption
         int n
         )
 {
-    double* d_fi;
-    double* d_x;
-
-    cudaMalloc(&d_fi, n * sizeof(double));
-    cudaMalloc(&d_x, n * sizeof(double));
-
-    get_init_assumpiton_cuda<<<(n / 1024) + 1, 1024>>>(
-            d_x,
-            d_fi,
-            z,
-            tet,
-            r0,
-            h,
-            nu_0,
-            n
-    );
-
-    cudaMemcpy(*fi, d_fi, sizeof(double) * n, cudaMemcpyDeviceToHost);
-    cudaMemcpy(*x, d_x, sizeof(double) * n, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_fi);
-    cudaFree(d_x);
-}
-
-__global__
-void
-calculate_entrope_cuda(
-        double* x2int32,
-        double* se_array,
-        double* fi,
-        double h,
-        double n
-)
-{
-    int block = blockDim.x * blockIdx.x + threadIdx.x;
-
-    if (block < n)
-    {
-        x2int32[block] = 2.0 * pow(block * h, 5.0) * fint_32(fi[block] / pow(block * h, 2.0));
-        se_array[block] = 2.0 * pow(block * h, 5.0) * ((5.0 / 3.0) * fint_32(fi[block] / pow(block * h, 2.0)) -
-                (fi[block] / pow(block * h, 2.0)) * fint_12(fi[block] / pow(block * h, 2.0)));
+    for (int block = 0; block < n; ++block) {
+        double hi = h * block;
+        fi[block] = (z / tet / r0) * (1.0 - 1.5 * pow(hi, 2.0) + 0.5 * pow(hi, 6.0)) - nu_0 * pow(hi, 2.0);
+        x[block] = hi;
     }
 }
+
 
 void calculate_entrope(
         double* x2int32,
@@ -110,37 +49,16 @@ void calculate_entrope(
         double n
         )
 {
-    double *d_x2int32;
-    double *d_se_array;
-    double *d_fi;
-    auto size_of_array = sizeof(double) * n;
-
-    cudaMalloc(&d_x2int32, size_of_array);
-    cudaMalloc(&d_se_array, size_of_array);
-    cudaMalloc(&d_fi, size_of_array);
-
-    cudaMemcpy(d_fi, fi, size_of_array, cudaMemcpyHostToDevice);
-
-    calculate_entrope_cuda <<< (n / 1024) + 1, 1024 >>> (
-            d_x2int32,
-            d_se_array,
-            d_fi,
-            h,
-            n
-            );
-
-    cudaMemcpy(x2int32, d_x2int32, size_of_array, cudaMemcpyDeviceToHost);
-    cudaMemcpy(se_array, d_se_array, size_of_array, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_x2int32);
-    cudaFree(d_se_array);
-    cudaFree(d_fi);
+    for (int block = 0; block < n; ++block) {
+        x2int32[block] = 2.0 * pow(block * h, 5.0) * fint_32(fi[block] / pow(block * h, 2.0));
+        se_array[block] = 2.0 * pow(block * h, 5.0) * ((5.0 / 3.0) * fint_32(fi[block] / pow(block * h, 2.0)) -
+                                                       (fi[block] / pow(block * h, 2.0)) * fint_12(fi[block] / pow(block * h, 2.0)));
+    }
 }
 
 
 // IMPROVE - REDUCTION OPERATION
-__host__
-__device__
+
 double
 rect(
         const double* x,
@@ -156,8 +74,7 @@ rect(
     return s;
 }
 
-__host__
-__device__
+
 double
 fint_neg12(double x)
 {
@@ -182,8 +99,7 @@ fint_neg12(double x)
     return res;
 }
 
-__host__
-__device__
+
 double
 fint_12(double x) {
     if (x >= 100.0) {
@@ -201,8 +117,7 @@ fint_12(double x) {
     return pow(1.5, 0.5) * pow(log(pi6_pow_1_3 * exp_of_x), 1.5);
 }
 
-__host__
-__device__
+
 double
 fint_32(double x)
 {
@@ -224,8 +139,7 @@ fint_32(double x)
 }
 
 
-__host__
-__device__
+
 double
 fint_neg12_der(double x)
 {
@@ -245,8 +159,7 @@ fint_neg12_der(double x)
 }
 
 
-__host__
-__device__
+
 double Y(double x)
 {
     double low_bound = -10.0;

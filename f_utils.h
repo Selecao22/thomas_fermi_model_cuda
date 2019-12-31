@@ -1,14 +1,16 @@
-#include <cstdlib>
-#include <cuda_runtime.h>
-#include <cmath>
+#ifndef _F_UTILS_H
+#define _F_UTILS_H
+
+#include <stdlib.h>
+#include <math.h>
 
 // Physical constants and some thrash like a const iterations
-const int N_X = 20;
-const int POINT_NUMBER = 54;
-const double PI = 3.141592653589793;
-const double K = 36.75;
-const double A = 107.0; // tmp constant, must be as parameter
-const double Z = 47.0; // tmp constant, must be as parameter
+//const int N_X = 20;
+#define POINT_NUMBER 54
+#define PI 3.141592653589793
+#define K 36.75
+#define A 107.0 // tmp constant, must be as parameter
+#define Z 47.0 // tmp constant, must be as parameter
 
 double*
 create_physic_array(int size);
@@ -16,8 +18,8 @@ create_physic_array(int size);
 void
 get_init_assumption
 (
-        double **x,
-        double **fi,
+        double *x,
+        double *fi,
         double z,
         double tet,
         double r0,
@@ -36,8 +38,6 @@ calculate_entrope(
 );
 
 
-__host__
-__device__
 double
 rect(
         const double* x,
@@ -46,32 +46,23 @@ rect(
 );
 
 
-__host__
-__device__
 double
 fint_neg12(double x);
 
 
-__host__
-__device__
 double
 fint_neg12_der(double x);
 
 
-__host__
-__device__
 double
 fint_12(double x);
 
 
-__host__
-__device__
 double
 fint_32(double x);
 
 
-
-__host__
-__device__
 double Y(double x);
 
+
+#endif
