@@ -1,8 +1,9 @@
 #ifndef _F_UTILS_H
 #define _F_UTILS_H
 
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
+#include <cuda_runtime.h>
 
 // Physical constants and some thrash like a const iterations
 //const int N_X = 20;
@@ -37,7 +38,8 @@ calculate_entrope(
         double n
 );
 
-
+__host__
+__device__
 double
 rect(
         const double* x,
@@ -45,24 +47,39 @@ rect(
         int n
 );
 
-
+__host__
+__device__
 double
 fint_neg12(double x);
 
-
+__host__
+__device__
 double
 fint_neg12_der(double x);
 
-
+__host__
+__device__
 double
 fint_12(double x);
 
-
+__host__
+__device__
 double
 fint_32(double x);
 
-
+__host__
+__device__
 double Y(double x);
 
+void
+calculate_dee_and_dse
+        (
+                double* dse,
+                double* dee,
+                double* fi,
+                double* dfi,
+                double H,
+                int N
+        );
 
 #endif

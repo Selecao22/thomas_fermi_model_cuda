@@ -1,5 +1,5 @@
 #include <omp.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include "f_utils.h"
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
                 double tet = K * t;
 
-                double r0 = 1.388 * pow((A / rho_array[j]), 1.0/3.0);
+                double r0 = 1.388 * pow((A / rho_array[j]), 1.0 / 3.0);
                 double q = 2.795e-3 * Z * rho_array[j] / A / pow(t, 1.5);
                 double v = (4.0 / 3.0) * PI * pow(r0, 3.0);
                 double aa = 4.0 / PI * sqrt(2.0 * tet) * pow(r0, 2.0);
@@ -115,16 +115,16 @@ int main(int argc, char** argv)
 
                 nu_0 = -fi[N - 1];
 
-                double pe = pow(2.0 * tet, 2.5) / (6.0 * pow(PI, 2)) * fint_32(-nu_0);
-                double psum = 29420.0 * (pe + tet / v);
+//                double pe = pow(2.0 * tet, 2.5) / (6.0 * pow(PI, 2)) * fint_32(-nu_0);
+//                double psum = 29420.0 * (pe + tet / v);
 
                 calculate_entrope(x2int32, se_array, fi, H, N);
 
-                double dif0 = (fi[1] - fi[0]) / pow(H, 2.0);
+//                double dif0 = (fi[1] - fi[0]) / pow(H, 2.0);
                 double int_01_calc = rect(x, x2int32, N);
 
-                double se = (4.0 * sqrt(2.0)* pow(tet, 1.5) * pow(r0, 3.0) / PI) * rect(x, se_array, N);
-                double s = 96.48 * (se + 1.5 * log(1836 * A * tet * pow(v, 2.0 / 3.0) / (2.0 * PI)) + 2.5) / A;
+//                double se = (4.0 * sqrt(2.0)* pow(tet, 1.5) * pow(r0, 3.0) / PI) * rect(x, se_array, N);
+//                double s = 96.48 * (se + 1.5 * log(1836 * A * tet * pow(v, 2.0 / 3.0) / (2.0 * PI)) + 2.5) / A;
 
                 double epe = (2.0 * sqrt(2.0) * v * pow(tet, 2.5) / pow(PI, 2.0)) *
                            (fint_32(-nu_0) - 3.0 * int_01_calc);
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
                 double eke = (3.0 * sqrt(2.0) * v * pow(tet, 2.5) / pow(PI, 2.0)) * int_01_calc;
                 double ee = epe + eke;
                 double e0 = -0.76874512422 * pow(Z, 7.0 / 3.0);
-                double e = 2626.0 * (ee - e0 + 1.5 * tet) / A;
+//                double e = 2626.0 * (ee - e0 + 1.5 * tet) / A;
 
                 double q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * fint_neg12(fi[N - 1]);
                 double f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
@@ -161,24 +161,15 @@ int main(int argc, char** argv)
                     dfi[k + 1] = alpha[k] * dfi[k] + beta[k];
 
 
-                double dpe = pow(tet, 2.0) / (3.0 * pow(PI, 3.0)) * (dfi[N - 1] * fint_12(fi[N - 1]) + Y(fi[N]));
+//                double dpe = pow(tet, 2.0) / (3.0 * pow(PI, 3.0)) * (dfi[N - 1] * fint_12(fi[N - 1]) + Y(fi[N]));
 
-                for (int k = 0; k < N; ++k) {
-
-                    dse_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
-                        fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
-                        pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
-
-                    dee_array[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
-                                                    fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
-                                                                                       pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
-                }
+                calculate_dee_and_dse(dse_array, dee_array, fi, dfi, H, N);
 
                 double dee = (2.0 * pow(tet, 2.0) * pow(r0, 2.0)) / (3.0 * pow(PI, 2.0)) * rect(x, dee_array, N) +
                            (sqrt(2.0 * tet) * Z / (6.0 * PI)) * (dfi[1] - dfi[0]) /
                            pow(H, 2.0) + 0.269900170 * pow(Z, 5.0 / 3.0);
 
-                double dmu = sqrt(2.0) * sqrt(tet) / (6.0 * PI) * (0.5 * fint_neg12(fi[N - 1] + dfi[N - 1]));
+//                double dmu = sqrt(2.0) * sqrt(tet) / (6.0 * PI) * (0.5 * fint_neg12(fi[N - 1] + dfi[N - 1]));
 
                 delta_array[i * POINT_NUMBER + j] = dee / (ee - e0);
 

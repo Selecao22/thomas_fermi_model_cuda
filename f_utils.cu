@@ -2,6 +2,7 @@
 // Created by nikky on 26.12.2019.
 //
 #include "f_utils.h"
+#include <device_launch_parameters.h>
 
 double* create_physic_array(int size)
 {
@@ -59,6 +60,8 @@ void calculate_entrope(
 
 // IMPROVE - REDUCTION OPERATION
 
+__host__
+__device__
 double
 rect(
         const double* x,
@@ -74,7 +77,8 @@ rect(
     return s;
 }
 
-
+__host__
+__device__
 double
 fint_neg12(double x)
 {
@@ -99,7 +103,8 @@ fint_neg12(double x)
     return res;
 }
 
-
+__host__
+__device__
 double
 fint_12(double x) {
     if (x >= 100.0) {
@@ -117,7 +122,8 @@ fint_12(double x) {
     return pow(1.5, 0.5) * pow(log(pi6_pow_1_3 * exp_of_x), 1.5);
 }
 
-
+__host__
+__device__
 double
 fint_32(double x)
 {
@@ -139,7 +145,8 @@ fint_32(double x)
 }
 
 
-
+__host__
+__device__
 double
 fint_neg12_der(double x)
 {
@@ -159,7 +166,8 @@ fint_neg12_der(double x)
 }
 
 
-
+__host__
+__device__
 double Y(double x)
 {
     double low_bound = -10.0;
@@ -181,6 +189,65 @@ double Y(double x)
     }
 
     return  (6.0 / 4.0) * rect(x_array, y_array, N_grid) + fint_neg12(x) * fint_12(x) / 2.0;
+
+}
+
+__global__
+void
+calculate_dee_and_dse_cuda(
+        double *dse,
+        double *dee,
+        double *fi,
+        double *dfi,
+        double H,
+        int N
+        )
+{
+    int k = blockIdx.x * blockDim.x + threadIdx.x;
+    if (k >= N)
+        return;
+
+    dse[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
+            fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
+            pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
+
+    dee[k] = dse[k];
+}
+
+void
+calculate_dee_and_dse
+(
+     double* dse,
+     double* dee,
+     double* fi,
+     double* dfi,
+     double H,
+     int N
+        )
+{
+    double *d_dse;
+    double *d_dee;
+    double *d_fi;
+    double *d_dfi;
+    int size = N * sizeof(double);
+
+    cudaMalloc(&d_dee, size);
+    cudaMalloc(&d_dse, size);
+    cudaMalloc(&d_fi, size);
+    cudaMalloc(&d_dfi, size);
+
+    cudaMemcpy(d_dfi, dfi, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_fi, fi, size, cudaMemcpyHostToDevice);
+
+    calculate_dee_and_dse_cuda<<<(N / 512) + 1, 512>>>(d_dse, d_dee, d_fi, d_dfi, H, N);
+
+    cudaMemcpy(dse, d_dse, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(dee, d_dee, size, cudaMemcpyDeviceToHost);
+
+    cudaFree(d_dee);
+    cudaFree(d_dse);
+    cudaFree(d_fi);
+    cudaFree(d_dfi);
 
 }
 
