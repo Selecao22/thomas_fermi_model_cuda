@@ -29,14 +29,14 @@ int main(int argc, char** argv)
     double *delta_array = (double*)calloc(POINT_NUMBER * POINT_NUMBER, sizeof(double));
     int progress = 0;
     double start = omp_get_wtime();
-
+// single tmp
 #pragma omp parallel shared(rho_array, t_array, delta_array, progress, H, N, stdout) default(none)
     {
         int thr = omp_get_thread_num();
         int thr_count = omp_get_num_threads();
 
         for (int i = thr; i < POINT_NUMBER; i+=thr_count) {
-            double t = t_array[i] * 1e-3;
+            double t = t_array[i] * 0.001;
 
             for (int j = 0; j < POINT_NUMBER; ++j) {
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
                 double tet = K * t;
 
-                double r0 = 1.388 * pow((A / rho_array[j]), 1.0 / 3.0);
+                double r0 = 1.388 * pow(A / rho_array[j], 1.0 / 3.0);
                 double q = 2.795e-3 * Z * rho_array[j] / A / pow(t, 1.5);
                 double v = (4.0 / 3.0) * PI * pow(r0, 3.0);
                 double aa = 4.0 / PI * sqrt(2.0 * tet) * pow(r0, 2.0);
@@ -67,11 +67,11 @@ int main(int argc, char** argv)
                 if (q > 100.0)
                     nu_0 = -pow(q * 3.0 / 2.0, 2.0 / 3.0);
                 else if (q < -100.0)
-                    nu_0 = log(sqrt(PI) / 2.0f / q);
+                    nu_0 = log(sqrt(PI) / 2.0 / q);
 
                 else
                     nu_0 = 0.5 * log(PI / 6.0) - 1.5 *
-                                                 log(exp(pow(2.0 * pow(q, 2.0 / 3.0), 1.0 / 3.0)) - 1.0);
+                            log(exp(pow(2.0 * pow(q, 2.0 / 3.0), 1.0 / 3.0)) - 1.0);
 
                 get_init_assumption(
                         x,
@@ -90,9 +90,9 @@ int main(int argc, char** argv)
                 {
                     double h_pow2 = pow(H, 2.0);
                     alpha[N - 2] = 1.0 / (1.0 - 2.0 * H + h_pow2 *
-                                                          (1.0 + aa* fint_neg12((fi[N - 1]))));
+                                                          (1.0 + aa * fint_neg12(fi[N - 1])));
                     beta[N - 2] = -aa * h_pow2 *
-                                  (fint_12(fi[N - 1]) - fi[N - 1] * fint_neg12(fi[N - 1])) /
+                                  (2.0 * fint_12(fi[N - 1]) - fi[N - 1] * fint_neg12(fi[N - 1])) /
                                   (1.0 - 2.0 * H + h_pow2 * (1.0 + aa * fint_neg12(fi[N - 1])));
 
                     for (int k = N - 2; k > 0; k--) {
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
                         double b_c = -4.0 * H * k * (1.0 + aa * h_pow2 *
                                                            pow(H * k, 2.0) * fint_neg12(fi[k] / pow(H * k, 2.0)));
                         double d_c = 4.0 * aa * h_pow2 * pow(H * k, 3.0) *
-                                     (2.0 * h_pow2 * fint_12(fi[k] / pow(H * k, 2.0)) -
+                                     (2.0 * pow(H * k, 2.0) * fint_12(fi[k] / pow(H * k, 2.0)) -
                                       fi[k] * fint_neg12(fi[k] / pow(H * k, 2.0)));
 
                         alpha[k - 1] = -a_c / (b_c + c_c * alpha[k]);
@@ -136,7 +136,9 @@ int main(int argc, char** argv)
 
                 double q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * fint_neg12(fi[N - 1]);
                 double f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
-                               ((7.0 / 4.0) * pow(fint_neg12(fi[N - 1]), 2.5) * fint_neg12_der(fi[N - 1]));
+                               ((7.0 / 4.0) * pow(fint_neg12(fi[N - 1]), 2.0) + 0.5 * fint_12(fi[N - 1]) *
+                               fint_neg12_der(fi[N - 1]));
+
                 alpha[N - 2] = 1.0 / (1.0 - 2.0 * H + pow(H, 2.0) * (1.0 + 2.0 * q_quant));
                 beta[N - 2] = -2.0 * pow(H, 2.0) * f_quant / (1.0 - 2.0 * H + pow(H, 2.0) * (1.0 + 2.0 * q_quant));
 
@@ -146,13 +148,13 @@ int main(int argc, char** argv)
                     q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
                               fint_neg12(fi[k] / pow(H * k, 2.0));
 
-                    f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
-                              ((7.0 / 4.0) * pow(fint_neg12(fi[k] / pow(H * k, 2.0)), 2.5) *
+                    f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * pow(H * k, 2.0) *
+                               ((7.0 / 4.0) * pow(fint_neg12(fi[k] / pow(H * k, 2.0)), 2.0) + 0.5 *
                                fint_12(fi[k] / pow(H * k, 2.0)) * fint_neg12_der(fi[k] / pow(H * k, 2.0)));
                     double a_c = H * (2.0 * k + 1.0);
                     double c_c = H * (2.0 * k - 1.0);
                     double b_c = -4.0 * k * H * (1.0 + 2.0 * pow(H * k, 2.0) * pow(H, 2.0) * q_quant);
-                    double d_c = f_quant * 8.0 * pow(H * k, 3.0) * pow(H, 3.0);
+                    double d_c = f_quant * 8.0 * pow(H * k, 3.0) * pow(H, 2.0);
                     alpha[k - 1] = -a_c / (b_c + c_c * alpha[k]);
                     beta[k - 1] = (d_c - c_c * beta[k]) / (b_c + c_c * alpha[k]);
                 }
@@ -165,7 +167,7 @@ int main(int argc, char** argv)
 
                 calculate_dee_and_dse(dse_array, dee_array, fi, dfi, H, N);
 
-                double dee = (2.0 * pow(tet, 2.0) * pow(r0, 2.0)) / (3.0 * pow(PI, 2.0)) * rect(x, dee_array, N) +
+                double dee = (2.0 * pow(tet, 2.0) * pow(r0, 3.0)) / (3.0 * pow(PI, 2.0)) * rect(x, dee_array, N) +
                            (sqrt(2.0 * tet) * Z / (6.0 * PI)) * (dfi[1] - dfi[0]) /
                            pow(H, 2.0) + 0.269900170 * pow(Z, 5.0 / 3.0);
 
@@ -211,14 +213,15 @@ int main(int argc, char** argv)
     fseek(da, 0, SEEK_SET);
 
     for (int i = 0; i < POINT_NUMBER; ++i) {
-        fprintf(rha, "%f,", rho_array[i]);
-        fprintf(ta, "%f,", t_array[i]);
+        fprintf(rha, "%f\t", rho_array[i]);
+        fprintf(ta, "%f\t", t_array[i]);
     }
 
     for (int i = 0; i < POINT_NUMBER; ++i) {
         for (int j = 0; j < POINT_NUMBER; ++j) {
-            fprintf(da, "%f,", delta_array[i * POINT_NUMBER + j]);
+            fprintf(da, "%f\t", log10(fabs(delta_array[i * POINT_NUMBER + j])));
         }
+        fprintf(da, "\n");
     }
 
     free(rho_array);

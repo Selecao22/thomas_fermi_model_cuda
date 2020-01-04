@@ -96,9 +96,9 @@ fint_neg12(double x)
     double exp_of_x = exp(2.0 * x / 3.0);
 
     // quesioning about my existance
-    double res = 2.0 * 1.5 * pow(1.5, 0.5) *
-            pow(log(1.0 + pi6_pow_1_3) * exp_of_x, 0.5) /
-            (1.0 + pi6_pow_1_3 * exp_of_x) * (-pi6_pow_1_3) * exp_of_x * 1.5;
+    double res = 3.0 * pow(1.5, 0.5) *
+            pow(log(1.0 + pi6_pow_1_3) * exp_of_x, 0.5) *
+            pow(1.0 + pi6_pow_1_3 * exp_of_x, -1.0) * pi6_pow_1_3 * exp_of_x * (2.0 / 3.0);
 
     return res;
 }
@@ -107,14 +107,11 @@ __host__
 __device__
 double
 fint_12(double x) {
-    if (x >= 100.0) {
-        return 1.5 * pow(x, 1.5);
-    }
+    if (x >= 100.0)
+        return (2.0 / 3.0) * pow(x, 1.5);
 
     if (x <= -50.0)
-    {
         return 0.5 * sqrt(PI) * exp(x);
-    }
 
     double pi6_pow_1_3 = pow(PI / 6.0, 1.0 / 3.0);
     double exp_of_x = exp(2.0 * x / 3.0);
@@ -207,11 +204,10 @@ calculate_dee_and_dse_cuda(
     if (k >= N)
         return;
 
-    dse[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] *
-            fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
+    dee[k] = 2.0 * (k * H) * (pow(k * H, 2.0) * dfi[k] * fint_12(fi[k] / pow(k * H, 2.0)) + 2.0 *
             pow(k * H, 4.0) * Y(fi[k] / pow(k * H, 2.0)));
 
-    dee[k] = dse[k];
+    dse[k] = dee[k];
 }
 
 void

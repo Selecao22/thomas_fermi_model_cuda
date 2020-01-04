@@ -19,5 +19,4 @@ set_target_properties(tf_cuda_improve PROPERTIES
 target_include_directories(tf_cuda_improve PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 add_executable(real_model ${THOMAS_FERMI_SOURCES})
-
 target_link_libraries(real_model tf_cuda_improve)
