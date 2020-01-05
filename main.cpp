@@ -59,7 +59,7 @@ int main(int argc, char** argv)
                 double tet = K * t;
 
                 double r0 = 1.388 * pow(A / rho_array[j], 1.0 / 3.0);
-                double q = 2.795e-3 * Z * rho_array[j] / A / pow(t, 1.5);
+                double q = 0.002795 * Z * rho_array[j] / A / pow(t, 1.5);
                 double v = (4.0 / 3.0) * PI * pow(r0, 3.0);
                 double aa = 4.0 / PI * sqrt(2.0 * tet) * pow(r0, 2.0);
                 double nu_0;

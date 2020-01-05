@@ -14,7 +14,7 @@ double* create_physic_array(int size)
     for (int i = 1; i < POINT_NUMBER; ++i) {
         array[i] = array[i - 1] + point_step;
         if (((i % 10 == 9) && i < 11 ) || ((i % 9) == 0 && i > 11))
-            point_step*=10;
+            point_step*=10.0;
     }
 
     return array;
@@ -53,7 +53,7 @@ void calculate_entrope(
     for (int block = 0; block < n; ++block) {
         x2int32[block] = 2.0 * pow(block * h, 5.0) * fint_32(fi[block] / pow(block * h, 2.0));
         se_array[block] = 2.0 * pow(block * h, 5.0) * ((5.0 / 3.0) * fint_32(fi[block] / pow(block * h, 2.0)) -
-                                                       (fi[block] / pow(block * h, 2.0)) * fint_12(fi[block] / pow(block * h, 2.0)));
+                (fi[block] / pow(block * h, 2.0)) * fint_12(fi[block] / pow(block * h, 2.0)));
     }
 }
 
@@ -97,7 +97,7 @@ fint_neg12(double x)
 
     // quesioning about my existance
     double res = 3.0 * pow(1.5, 0.5) *
-            pow(log(1.0 + pi6_pow_1_3) * exp_of_x, 0.5) *
+            pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 0.5) *
             pow(1.0 + pi6_pow_1_3 * exp_of_x, -1.0) * pi6_pow_1_3 * exp_of_x * (2.0 / 3.0);
 
     return res;
@@ -116,7 +116,7 @@ fint_12(double x) {
     double pi6_pow_1_3 = pow(PI / 6.0, 1.0 / 3.0);
     double exp_of_x = exp(2.0 * x / 3.0);
 
-    return pow(1.5, 0.5) * pow(log(pi6_pow_1_3 * exp_of_x), 1.5);
+    return pow(1.5, 0.5) * pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 1.5);
 }
 
 __host__
@@ -138,7 +138,7 @@ fint_32(double x)
     double exp_of_x = exp(2.0 * x / 3.0);
 
     double f12 = pow(1.5, 0.5) * pow(log(1.0 + pi6_pow_1_3 * exp_of_x), 1.5);
-    return 0.3 * f12 * pow(185.0 * f12 + 18.0 * pow(f12, 2.0), 1.0 / 3.0);
+    return 0.3 * f12 * pow(125.0 + 60.0 * f12 + 18.0 * pow(f12, 2.0), 1.0 / 3.0);
 }
 
 
@@ -148,18 +148,18 @@ double
 fint_neg12_der(double x)
 {
     if (x >= 120.0)
-        return 1 / sqrt(1.0*x) + 12.4298 / pow(x, 4.5+1.2337) / pow(x, 2.5);
+        return 1.0 / sqrt(1.0 * x) + 12.4298 / pow(x, 4.5) + 1.2337 / pow(x, 2.5);
 
     if (x <= -50.0)
         return sqrt(PI) * exp(x);
 
-    return 2.0 * sqrt(3.0/2.0) * (-pow(2.0, (1.0 / 3.0)) * pow(PI, 2.0 / 3.0) * exp(4.0 * x / 3.0) *
-        sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x /3.0) + 1.0))) / (3.0 * pow(3.0, 2.0 / 3.0) *
-        pow(pow(PI/6.0, 1.0/3.0) * exp(2.0 * x / 3.0) + 1.0, 2.0) +
-        (pow(PI, 2.0 / 3.0) * exp( 4.0 * x / 3.0) / ( 3.0 * pow(6.0, 2.0 / 3.0) * (pow(PI / 6.0, 1.0 / 3.0) *
-        pow(exp(2.0 * x / 3.0) + 1.0, 2.0) * sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0)))) +
-        (pow(2.0,2.0 / 3.0) * pow(PI / 3.0, 1.0 / 3.0) * exp(2.0 * x / 3.0)*sqrt(log(pow(PI / 6.0,1.0 / 3.0) *
-        exp((2.0 * x) / 3.0) + 1.0))) / (3.0 * (pow(PI / 6.0,1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0))));
+    return 2.0 * sqrt(3.0 / 2.0) * ( -(pow(2.0, 1.0 / 3.0) * pow(PI, 2.0 / 3.0) * exp(4.0 * x / 3.0) *
+            sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0))) / (3.0 * pow(3.0, 2.0 / 3.0) *
+            pow(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0, 2.0)) + (pow(PI, 2.0 / 3.0) * exp(4.0 * x / 3.0) /
+            (3.0 * pow(6.0, 2.0 / 3.0) * pow(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0, 2.0) *
+            sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0)))) + (pow(2.0, 2.0 / 3.0) *
+            pow(PI / 3.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) * sqrt(log(pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0))) /
+            (3.0 * (pow(PI / 6.0, 1.0 / 3.0) * exp(2.0 * x / 3.0) + 1.0)));
 }
 
 
