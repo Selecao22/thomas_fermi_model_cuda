@@ -55,7 +55,6 @@ int main(int argc, char** argv)
                 double *dee_array = (double*)calloc(N, sizeof(double));
                 double *dse_array = (double*)calloc(N, sizeof(double));
 
-
                 double tet = K * t;
 
                 double r0 = 1.388 * pow(A / rho_array[j], 1.0 / 3.0);
