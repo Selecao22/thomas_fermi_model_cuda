@@ -1,5 +1,5 @@
 #include <omp.h>
-#include <cstdio>
+#include <iostream>
 
 #include "f_utils.h"
 
@@ -9,19 +9,19 @@ int main(int argc, char** argv)
     double H;
 
     if (argc == 1){
-        printf("usage: %s N\n", argv[0]);
+        std::cout << "usage: " << argv[0] << " N\n";
         return 0;
     }
 
     if (argc == 2) {
         N = atoi(argv[1]);
         if (N <= 0){
-            printf("error: N must be from 1 to 100 000 000\n");
+            std::cout << "error: N must be from 1 to 100 000 000\n";
             return 1;
         }
     }
-
     H = 1.0 / N;
+    N++;
     double *rho_array = create_physic_array(N);
     double *t_array = create_physic_array(N);
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     int progress = 0;
     double start = omp_get_wtime();
 // single tmp
-#pragma omp parallel shared(rho_array, t_array, delta_array, progress, H, N, stdout) default(none)
+#pragma omp parallel shared(rho_array, t_array, delta_array, progress, H, N, std::cout) default(none)
     {
         int thr = omp_get_thread_num();
         int thr_count = omp_get_num_threads();
@@ -133,6 +133,7 @@ int main(int argc, char** argv)
                 double e0 = -0.76874512422 * pow(Z, 7.0 / 3.0);
 //                double e = 2626.0 * (ee - e0 + 1.5 * tet) / A;
 
+                // quantum correlation
                 double q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * fint_neg12(fi[N - 1]);
                 double f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
                                ((7.0 / 4.0) * pow(fint_neg12(fi[N - 1]), 2.0) + 0.5 * fint_12(fi[N - 1]) *
@@ -142,7 +143,6 @@ int main(int argc, char** argv)
                 beta[N - 2] = -2.0 * pow(H, 2.0) * f_quant / (1.0 - 2.0 * H + pow(H, 2.0) * (1.0 + 2.0 * q_quant));
 
 
-                // quantum correlation
                 for (int k = N - 1; k > 0; k--) {
                     q_quant = (2.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) *
                               fint_neg12(fi[k] / pow(H * k, 2.0));
@@ -150,6 +150,7 @@ int main(int argc, char** argv)
                     f_quant = (4.0 * sqrt(2.0 * tet) / PI) * pow(r0, 2.0) * pow(H * k, 2.0) *
                                ((7.0 / 4.0) * pow(fint_neg12(fi[k] / pow(H * k, 2.0)), 2.0) + 0.5 *
                                fint_12(fi[k] / pow(H * k, 2.0)) * fint_neg12_der(fi[k] / pow(H * k, 2.0)));
+
                     double a_c = H * (2.0 * k + 1.0);
                     double c_c = H * (2.0 * k - 1.0);
                     double b_c = -4.0 * k * H * (1.0 + 2.0 * pow(H * k, 2.0) * pow(H, 2.0) * q_quant);
@@ -187,8 +188,8 @@ int main(int argc, char** argv)
 #pragma omp critical
                 {
                     progress++;
-                    printf("%d%%\r", (int)((double)progress / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) );
-                    fflush(stdout);
+                    std::cout << (int)((double)progress / (double)(POINT_NUMBER * POINT_NUMBER) * 100.0) << "%\r";
+                    std::cout.flush();
                 }
 
 
