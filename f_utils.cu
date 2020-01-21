@@ -169,7 +169,7 @@ __device__
 double Y(double x)
 {
     double low_bound = -10.0;
-    const int N_grid = 1000;
+    const int N_grid = 1001;
     double h;
     double x_array[N_grid];
     double y_array[N_grid];
@@ -180,7 +180,7 @@ double Y(double x)
     if (x < -50.0)
         return  (6.0 / 4.0) * (PI / 2.0) * exp(2.0 * x) + fint_neg12(x) * fint_12(x) / 2.0;
 
-    h = (x - low_bound) / N_grid;
+    h = (x - low_bound) / (N_grid - 1.0);
     for (int i = 0; i < N_grid; ++i) {
         x_array[i] = low_bound + i * h;
         y_array[i] = pow(fint_neg12(x_array[i]), 2.0);

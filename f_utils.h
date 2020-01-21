@@ -7,7 +7,7 @@
 
 // Physical constants and some thrash like a const iterations
 //const int N_X = 20;
-#define POINT_NUMBER 54
+#define POINT_NUMBER 55
 #define PI 3.141592653589793
 #define K 36.75
 #define A 107.0 // tmp constant, must be as parameter
